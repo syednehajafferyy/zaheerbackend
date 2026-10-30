@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum InquiryStatus {
+  PENDING
+  READ
+  RESOLVED
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  image       String?
+  published   Boolean   @default(false)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([published, categoryId])
+}
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  subject   String
+  message   String
+  status    InquiryStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  name      String
+  phone     String
+  address   String
+  notes     String?
+  status    OrderStatus @default(NEW)
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  name      String
+  quantity  Int
+}
+
+model SiteImage {
+  key       String   @id
+  url       String
+  updatedAt DateTime @updatedAt
+}

@@ -11,7 +11,9 @@ const bust = () => { for (const p of ["/admin/dashboard", "/admin/products", "/a
 const prod = z.object({ name: z.string().trim().min(2).max(120), description: z.string().trim().min(5).max(5000), categoryId: z.string().optional() });
 export async function saveProduct(id: string, _: { error?: string }, fd: FormData) {
   await guard();
-  const p = prod.safeParse(Object.fromEntries(fd)); if (!p.success) return { error: "Name and description are required." };
+  const raw: Record<string, FormDataEntryValue> = {};
+  fd.forEach((v, k) => { raw[k] = v; });
+  const p = prod.safeParse(raw); if (!p.success) return { error: "Name and description are required." };
   const old = id === "new" ? null : await db.product.findUnique({ where: { id } });
   let image = old?.image ?? null; const file = fd.get("file") as File | null;
   if (file && file.size > 0) {

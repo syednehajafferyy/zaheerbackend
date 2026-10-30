@@ -14,7 +14,9 @@ export async function submitInquiry(_: ContactState, fd: FormData): Promise<Cont
   if (fd.get("website")) return { ok: true, message: "Thank you. We will be in touch." }; // honeypot
   const started = Number(fd.get("t"));
   if (!started || Date.now() - started < 3000) return { ok: false, message: "Please take a moment to complete the form." };
-  const parsed = schema.safeParse(Object.fromEntries(fd));
+  const raw: Record<string, FormDataEntryValue> = {};
+  fd.forEach((v, k) => { raw[k] = v; });
+  const parsed = schema.safeParse(raw);
   if (!parsed.success) return { ok: false, message: "Please correct the highlighted fields.", errors: parsed.error.flatten().fieldErrors };
   const key = parsed.data.email;
   if (Date.now() - (recent.get(key) ?? 0) < 30000) return { ok: false, message: "Please wait before sending another inquiry." };
